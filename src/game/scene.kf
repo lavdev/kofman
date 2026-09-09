@@ -1,0 +1,120 @@
+// Pure scene construction. Canvas/Label handles stay in main.kf.
+
+void buildScene(List<Int> ops) {
+    opRect(ops, 0, 0, G.CW, G.CH, 0)
+
+    // walls batched
+    opBegin(ops)
+    var y = 0
+    while (y < G.ROWS) {
+        var x = 0
+        while (x < G.COLS) {
+            if (glyph(x, y) == '#') {
+                var x0 = x * G.T
+                var y0 = y * G.T
+                opMt(ops, x0, y0)
+                opLt(ops, x0 + G.T, y0)
+                opLt(ops, x0 + G.T, y0 + G.T)
+                opLt(ops, x0, y0 + G.T)
+            }
+            x = x + 1
+        }
+        y = y + 1
+    }
+    opFill(ops, 1)
+    opBegin(ops)
+    y = 0
+    while (y < G.ROWS) {
+        var x = 0
+        while (x < G.COLS) {
+            if (glyph(x, y) == '#') {
+                var x0 = x * G.T
+                var y0 = y * G.T
+                opMt(ops, x0 + 6, y0 + 6)
+                opLt(ops, x0 + 6, y0 + 18)
+                opLt(ops, x0 + 18, y0 + 6)
+            }
+            x = x + 1
+        }
+        y = y + 1
+    }
+    opFill(ops, 2)
+
+    // pellets
+    opBegin(ops)
+    y = 0
+    while (y < G.ROWS) {
+        var x = 0
+        while (x < G.COLS) {
+            if (glyph(x, y) == '.') {
+                opMt(ops, x * G.T + 37, y * G.T + 32)
+                opArc(ops, x * G.T + 32, y * G.T + 32, 5)
+            }
+            x = x + 1
+        }
+        y = y + 1
+    }
+    opFill(ops, 3)
+
+    // power bytes
+    opBegin(ops)
+    y = 0
+    while (y < G.ROWS) {
+        var x = 0
+        while (x < G.COLS) {
+            if (glyph(x, y) == 'o') {
+                opMt(ops, x * G.T + 45, y * G.T + 32)
+                opArc(ops, x * G.T + 32, y * G.T + 32, 13)
+            }
+            x = x + 1
+        }
+        y = y + 1
+    }
+    opFill(ops, 4)
+    opBegin(ops)
+    y = 0
+    while (y < G.ROWS) {
+        var x = 0
+        while (x < G.COLS) {
+            if (glyph(x, y) == 'o') {
+                opMt(ops, x * G.T + 37, y * G.T + 32)
+                opArc(ops, x * G.T + 32, y * G.T + 32, 5)
+            }
+            x = x + 1
+        }
+        y = y + 1
+    }
+    opFill(ops, 5)
+
+    // pause overlay
+    if (G.mode == 5) {
+        opAlpha(ops, 45)
+        opRect(ops, 0, 0, G.CW, G.CH, 6)
+        opAlpha(ops, 100)
+    }
+
+    drawEntities(ops)
+}
+
+void drawEntities(List<Int> ops) {
+    var bs = G.bugs
+    for (var b in bs) {
+        var blink = false
+        if (b.st == 1 && G.fright > 0 && G.fright < 20) {
+            blink = G.tick % 2 == 0
+        }
+        if (!blink) {
+            var f = bugFrame(b)
+            var flip = 0
+            if (!b.rightArt && b.dir == 1) {
+                flip = 1
+            }
+            var alpha = 100
+            if (b.st == 1) {
+                alpha = 55
+            }
+            opSpr(ops, img(f), b.px - 32, b.py - 32, flip, alpha)
+        }
+    }
+    opSpr(ops, img(playerFrame()), G.px - 32, G.py - 32, playerFlip(), 100)
+}

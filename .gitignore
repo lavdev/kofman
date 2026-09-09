@@ -1,0 +1,5 @@
+# Build/runtime artifacts — regenerate with `make web`, never commit.
+web/
+
+# Placar persistido pelo servidor em runtime.
+data/

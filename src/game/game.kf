@@ -1,0 +1,867 @@
+// Byte Eater — a pacman-like maze chaser, 100% Kof (kof.ui / kofjs target).
+// The Byte Eater (player) runs a maze eating byte pellets while color-coded
+// code bugs (blue, pink, orange) chase it. Power bytes flip the chase:
+// eat a frightened bug for bonus points.
+//
+// Art: assets/byte-eater-atlas.png sliced per-frame into assets/sprites/
+// (see assets/slice.sh). Atlas frames face RIGHT by default — sprites are
+// mirrored with canvas transform when the entity moves LEFT.
+//
+// Architecture note (kofjs 0.3.2, verified in a real browser):
+// kof.ui method calls only lower to DOM calls when the widget handle is a
+// local created by the widget constructor (or a capture of one) inside
+// main()/its lambdas. Any handle crossing a function boundary (annotation
+// or static field) loses its widget type and compiles to raw JS calls that
+// crash at runtime. So the game logic is PURE (no widgets): each tick it
+// appends small draw ops to a local list; the interval lambda created in
+// main() — where Canvas/Label handles exist — drains the ops and syncs the
+// HUD labels. Extra compiler quirks worked around:
+//   - static listOf(...) with elements drops its literal body -> build
+//     lists through locals before assigning statics;
+//   - static field initializers only keep literal values -> initGlobals();
+//   - lambdas capture read-only snapshots -> cross-tick text state in
+//     statics, widget handles stay captured;
+//   - Char values are numeric code points: concatenating a Char into a
+//     String yields its code number, so string surgery uses substrings;
+//   - a top-level function named `at` collides with the scheduler builtin
+//     (emits kofSchedulerAt) -> the cell reader is named `glyph`.
+
+class G {
+    // ---- world ----
+    static List<String> maze = listOf()
+    static List<String> cur = listOf()
+    static Int T = 64
+    static Int COLS = 16
+    static Int ROWS = 12
+    static Int CW = 1024
+    static Int CH = 768
+
+    // ---- player ----
+    static Int ptx = 7
+    static Int pty = 9
+    static Int px = 480
+    static Int py = 608
+    static Int dir = 1        // 0 left 1 right 2 up 3 down
+    static Int want = 1
+    static Int speed = 26     // px per tick (level scaled)
+    static Bool moving = false
+
+    // ---- game state ----
+    static Int score = 0
+    static Int lives = 3
+    static Int level = 1
+    static Int pelletsLeft = 0
+    static Int mode = 0       // 0 ready 1 play 2 dying 3 gameover 4 levelclear 5 paused
+    static Int modeT = 0
+    static Int tick = 0
+    static Int fright = 0
+    static Int hi = 0
+    static Bool busy = false
+    static String msg = ""
+    static String lastHud = ""
+    static String lastMsg = ""
+
+    // ---- sprite handles (Int ids into imgs) ----
+    static List<Int> imgs = listOf()
+    static List<Bug> bugs = listOf()
+}
+
+void initGlobals() {
+    var m = listOf<String>()
+    m.add("################")
+    m.add("#o............o#")
+    m.add("#.####....####.#")
+    m.add("#.####....####.#")
+    m.add("#.##........##.#")
+    m.add("#.##.##..##.##.#")
+    m.add("#.##........##.#")
+    m.add("#.####....####.#")
+    m.add("#.####....####.#")
+    m.add("#o.....P......o#")
+    m.add("#..............#")
+    m.add("################")
+    G.maze = m
+    G.cur = listOf()
+    G.imgs = listOf()
+    G.bugs = listOf()
+    G.px = 7 * G.T + 32
+    G.py = 9 * G.T + 32
+}
+
+// Sprite sheet index: image list layout
+//  0..3   player_run_*   (row0, canonical RIGHT)
+//  4..7   player_alt_*   (row1, canonical RIGHT)
+//  8..11  player_byte_*  (row2, byte munching)
+//  12..15 player_zzz_*   (row5, rest)
+//  16..19 bug_blue_*
+//  20..21 bug_pink_*
+//  22..23 bug_orange_*
+class Bug {
+    Int id
+    Int tx = 0
+    Int ty = 0
+    Int px = 0
+    Int py = 0
+    Int dir = 0
+    Int last = 0
+    Int homeX = 7
+    Int homeY = 5
+    Int scatterX = 14
+    Int scatterY = 1
+    Int kind = 0          // 0 blue 1 pink 2 orange
+    Int st = 0            // 0 hunt 1 fright 2 returning
+    Bool rightArt = false // art faces viewer (no mirror)
+
+    public constructor(Int id, Int kind) {
+        this.id = id
+        this.kind = kind
+        if (kind == 1) {
+            homeX = 8
+            homeY = 5
+            scatterX = 1
+            scatterY = 1
+        }
+        if (kind == 2) {
+            homeX = 7
+            homeY = 6
+            scatterX = 14
+            scatterY = 10
+            rightArt = true
+        }
+    }
+}
+
+// ---------------------------------------------------------------- grid
+
+Char glyph(Int x, Int y) {
+    var rows = G.cur
+    var row = rows.get(y)
+    return row.charAt(x)
+}
+
+Bool isWallAt(Int x, Int y) {
+    if (x < 0 || y < 0 || x >= G.COLS || y >= G.ROWS) {
+        return true
+    }
+    return glyph(x, y) == '#'
+}
+
+Bool isFloorAt(Int x, Int y) {
+    return !isWallAt(x, y)
+}
+
+void clearCell(Int x, Int y) {
+    var rows = G.cur
+    var row = rows.get(y)
+    var left = row.substring(0, x)
+    var right = row.substring(x + 1)
+    rows.set(y, left + " " + right)
+}
+
+Int img(Int base) {
+    var ims = G.imgs
+    return ims.get(base)
+}
+
+String pad(Int v, Int w) {
+    var s = "" + v
+    while (s.length() < w) {
+        s = "0" + s
+    }
+    return s
+}
+
+// ---------------------------------------------------------------- level
+
+void buildCur() {
+    var fresh = listOf<String>()
+    for (var row in G.maze) {
+        fresh.add(row)
+    }
+    G.cur = fresh
+}
+
+void initLevel() {
+    buildCur()
+    clearCell(7, 5)
+    clearCell(8, 5)
+    clearCell(7, 6)
+    clearCell(7, 9)
+    G.pelletsLeft = 0
+    var y = 0
+    while (y < G.ROWS) {
+        var x = 0
+        while (x < G.COLS) {
+            if (glyph(x, y) == '.') {
+                G.pelletsLeft = G.pelletsLeft + 1
+            }
+            x = x + 1
+        }
+        y = y + 1
+    }
+    resetActors()
+    G.fright = 0
+    G.modeT = 0
+}
+
+void resetActors() {
+    G.ptx = 7
+    G.pty = 9
+    G.px = 7 * G.T + 32
+    G.py = 9 * G.T + 32
+    G.dir = 1
+    G.want = 1
+    G.moving = false
+    G.fright = 0
+    var bs = G.bugs
+    var n = 0
+    while (n < bs.size()) {
+        var b = bs.get(n)
+        b.tx = b.homeX
+        b.ty = b.homeY
+        b.px = b.homeX * G.T + 32
+        b.py = b.homeY * G.T + 32
+        b.dir = 0
+        b.last = 0
+        b.st = 0
+        n = n + 1
+    }
+}
+
+// ---------------------------------------------------------------- input
+
+void press(Int d) {
+    G.want = d
+    if (G.mode == 0 || G.mode == 3) {
+        newGame()
+        G.mode = 1
+        G.modeT = 0
+        G.msg = ""
+    }
+}
+
+void togglePause() {
+    if (G.mode == 1) {
+        G.mode = 5
+        G.msg = "pausa — clique pausa para voltar"
+    } else {
+        if (G.mode == 5) {
+            G.mode = 1
+            G.msg = ""
+        }
+    }
+}
+
+void newGame() {
+    G.score = 0
+    G.lives = 2
+    G.level = 1
+    initLevel()
+    G.mode = 0
+    G.tick = 0
+    G.msg = "pronto? clique uma seta para comecar"
+}
+
+// ---------------------------------------------------------------- player
+
+Int playerSpeed() {
+    var s = 26 + (G.level - 1) * 2
+    if (s > 44) {
+        s = 44
+    }
+    return s
+}
+
+void movePlayer() {
+    // resting on a tile center: try to turn, then commit the next tile
+    var turnX = G.ptx
+    var turnY = G.pty
+    if (G.want == 0) { turnX = G.ptx - 1 }
+    if (G.want == 1) { turnX = G.ptx + 1 }
+    if (G.want == 2) { turnY = G.pty - 1 }
+    if (G.want == 3) { turnY = G.pty + 1 }
+    if (isFloorAt(turnX, turnY)) {
+        G.dir = G.want
+    }
+    var aheadX = G.ptx
+    var aheadY = G.pty
+    if (G.dir == 0) { aheadX = G.ptx - 1 }
+    if (G.dir == 1) { aheadX = G.ptx + 1 }
+    if (G.dir == 2) { aheadY = G.pty - 1 }
+    if (G.dir == 3) { aheadY = G.pty + 1 }
+    if (!isFloorAt(aheadX, aheadY)) {
+        G.moving = false
+        return
+    }
+    G.ptx = aheadX
+    G.pty = aheadY
+    G.moving = true
+}
+
+void stepPlayer() {
+    var still = !G.moving
+    if (still) {
+        return
+    }
+    var targetX = G.ptx * G.T + 32
+    var targetY = G.pty * G.T + 32
+    var atX = G.px == targetX
+    var atY = G.py == targetY
+    if (atX && atY) {
+        arrivePlayer()
+        return
+    }
+    var step = G.speed
+    var horiz = G.dir == 0
+    var isRight = G.dir == 1
+    var isDown = G.dir == 3
+    if (horiz) {
+        G.px = G.px - step
+        if (G.px < targetX) {
+            G.px = targetX
+        }
+        if (G.px == targetX) {
+            arrivePlayer()
+        }
+    } else {
+        if (isRight) {
+            G.px = G.px + step
+            if (G.px > targetX) {
+                G.px = targetX
+            }
+            if (G.px == targetX) {
+                arrivePlayer()
+            }
+        } else {
+            if (isDown) {
+                G.py = G.py + step
+                if (G.py > targetY) {
+                    G.py = targetY
+                }
+            } else {
+                G.py = G.py - step
+                if (G.py < targetY) {
+                    G.py = targetY
+                }
+            }
+            if (G.py == targetY) {
+                arrivePlayer()
+            }
+        }
+    }
+}
+
+void arrivePlayer() {
+    var ch = glyph(G.ptx, G.pty)
+    if (ch == '.' || ch == 'o') {
+        var wasPower = ch == 'o'
+        clearCell(G.ptx, G.pty)
+        if (wasPower) {
+            G.score = G.score + 50
+            G.fright = 70 - (G.level - 1) * 8
+            if (G.fright < 25) { G.fright = 25 }
+            frightOn()
+            G.msg = "byte azul! os bugs estao assustados"
+        } else {
+            G.score = G.score + 10
+        }
+        G.pelletsLeft = G.pelletsLeft - 1
+        if (G.pelletsLeft <= 0) {
+            G.mode = 4
+            G.modeT = 9
+            G.moving = false
+            G.msg = "nivel completo!"
+            return
+        }
+    }
+    movePlayer()
+}
+
+void killPlayer() {
+    G.lives = G.lives - 1
+    if (G.lives < 0) {
+        G.lives = 0
+        G.mode = 3
+        G.modeT = 0
+        if (G.score > G.hi) {
+            G.hi = G.score
+        }
+        G.msg = "fim de jogo! pontos " + G.score + "  clique uma seta para jogar de novo"
+        return
+    }
+    G.mode = 2
+    G.modeT = 14
+    G.msg = "vida perdida!"
+}
+
+// ---------------------------------------------------------------- bugs
+
+Int bugSpeed(Bug b) {
+    if (b.st == 2) {
+        return 48
+    }
+    if (b.st == 1) {
+        return 13
+    }
+    var s = 20 + (G.level - 1) * 3 + b.id * 2
+    if (s > 40) {
+        s = 40
+    }
+    return s
+}
+
+Int opposite(Int d) {
+    if (d == 0) { return 1 }
+    if (d == 1) { return 0 }
+    if (d == 2) { return 3 }
+    return 2
+}
+
+Int dist2(Int x1, Int y1, Int x2, Int y2) {
+    var dx = x1 - x2
+    var dy = y1 - y2
+    return dx * dx + dy * dy
+}
+
+Int pickDir(Bug b, Int targX, Int targY, Int rnd) {
+    var opts = listOf<Int>()
+    var d = 0
+    while (d < 4) {
+        var nx = b.tx
+        var ny = b.ty
+        if (d == 0) { nx = nx - 1 }
+        if (d == 1) { nx = nx + 1 }
+        if (d == 2) { ny = ny - 1 }
+        if (d == 3) { ny = ny + 1 }
+        if (isFloorAt(nx, ny) && d != opposite(b.last)) {
+            opts.add(d)
+        }
+        d = d + 1
+    }
+    if (opts.size() == 0) {
+        return opposite(b.last)
+    }
+    if (b.st == 1) {
+        return opts.get(rnd % opts.size())
+    }
+    var best = opts.get(0)
+    var bestD = 99999999
+    for (var o in opts) {
+        var nx = b.tx
+        var ny = b.ty
+        if (o == 0) { nx = nx - 1 }
+        if (o == 1) { nx = nx + 1 }
+        if (o == 2) { ny = ny - 1 }
+        if (o == 3) { ny = ny + 1 }
+        var dd = dist2(nx, ny, targX, targY)
+        if (dd < bestD) {
+            bestD = dd
+            best = o
+        }
+    }
+    return best
+}
+
+void chooseBugTarget(Bug b) {
+    var tx = G.ptx
+    var ty = G.pty
+    if (b.st == 0) {
+        var pulse = (G.tick / 90) % 2
+        if (pulse == 0) {
+            tx = G.ptx
+            ty = G.pty
+        } else {
+            tx = b.scatterX
+            ty = b.scatterY
+        }
+    }
+    if (b.st == 2) {
+        tx = b.homeX
+        ty = b.homeY
+    }
+    var rnd = G.tick + b.id * 17 + b.tx * 3 + b.ty * 5
+    var nd = pickDir(b, tx, ty, rnd)
+    b.dir = nd
+    b.last = nd
+}
+
+void commitBug(Bug b) {
+    var nx = b.tx
+    var ny = b.ty
+    if (b.dir == 0) { nx = b.tx - 1 }
+    if (b.dir == 1) { nx = b.tx + 1 }
+    if (b.dir == 2) { ny = b.ty - 1 }
+    if (b.dir == 3) { ny = b.ty + 1 }
+    if (isFloorAt(nx, ny)) {
+        b.tx = nx
+        b.ty = ny
+    }
+}
+
+void stepBug(Bug b) {
+    var speed = bugSpeed(b)
+    var targetX = b.tx * G.T + 32
+    var targetY = b.ty * G.T + 32
+    var atX = b.px == targetX
+    var atY = b.py == targetY
+    if (atX && atY) {
+        bugArrive(b)
+        return
+    }
+    var goLeft = b.dir == 0
+    var isRight = b.dir == 1
+    var isDown = b.dir == 3
+    if (goLeft) {
+        b.px = b.px - speed
+        if (b.px < targetX) {
+            b.px = targetX
+        }
+        if (b.px == targetX) {
+            bugArrive(b)
+        }
+    } else {
+        if (isRight) {
+            b.px = b.px + speed
+            if (b.px > targetX) {
+                b.px = targetX
+            }
+            if (b.px == targetX) {
+                bugArrive(b)
+            }
+        } else {
+            if (isDown) {
+                b.py = b.py + speed
+                if (b.py > targetY) {
+                    b.py = targetY
+                }
+            } else {
+                b.py = b.py - speed
+                if (b.py < targetY) {
+                    b.py = targetY
+                }
+            }
+            if (b.py == targetY) {
+                bugArrive(b)
+            }
+        }
+    }
+}
+
+void bugArrive(Bug b) {
+    if (b.st == 2 && b.tx == b.homeX && b.ty == b.homeY) {
+        b.st = 0
+        b.last = 0
+    }
+    chooseBugTarget(b)
+    commitBug(b)
+}
+
+void frightOn() {
+    var bs = G.bugs
+    for (var b in bs) {
+        if (b.st == 0) {
+            b.st = 1
+        }
+    }
+}
+
+void frightOff() {
+    var bs = G.bugs
+    for (var b in bs) {
+        if (b.st == 1) {
+            b.st = 0
+        }
+    }
+}
+
+void checkCollisions() {
+    if (G.mode != 1) {
+        return
+    }
+    var bs = G.bugs
+    for (var b in bs) {
+        var dx = b.px - G.px
+        var dy = b.py - G.py
+        if (dx * dx + dy * dy < 36 * 36) {
+            if (b.st == 1) {
+                b.st = 2
+                b.last = 0
+                G.score = G.score + 200
+                G.msg = "bug devorado! +200"
+                chooseBugTarget(b)
+                commitBug(b)
+            } else {
+                if (b.st != 2) {
+                    killPlayer()
+                    return
+                }
+            }
+        }
+    }
+}
+
+// ---------------------------------------------------------------- simulation
+
+void tickState() {
+    G.tick = G.tick + 1
+    G.modeT = G.modeT - 1
+    if (G.fright > 0) {
+        G.fright = G.fright - 1
+        if (G.fright == 0) {
+            frightOff()
+        }
+    }
+
+    if (G.mode == 1) {
+        G.speed = playerSpeed()
+        var restX = G.ptx * G.T + 32
+        var restY = G.pty * G.T + 32
+        if (!G.moving && G.px == restX && G.py == restY) {
+            movePlayer()
+        }
+        stepPlayer()
+        if (G.mode == 1) {
+            var bs = G.bugs
+            for (var b in bs) {
+                stepBug(b)
+            }
+            checkCollisions()
+        }
+    }
+
+    if (G.mode == 2 && G.modeT <= 0) {
+        resetActors()
+        G.mode = 1
+        G.modeT = 0
+        G.msg = ""
+    }
+
+    if (G.mode == 4 && G.modeT <= 0) {
+        G.level = G.level + 1
+        initLevel()
+        G.mode = 1
+        G.msg = "nivel " + G.level
+    }
+}
+
+// ---------------------------------------------------------------- frames
+
+Int bugFrame(Bug b) {
+    if (b.kind == 0) {
+        return 16 + (G.tick / 2) % 4
+    }
+    if (b.kind == 1) {
+        return 20 + (G.tick / 2) % 2
+    }
+    return 22 + (G.tick / 2) % 2
+}
+
+Int playerFrame() {
+    var idle = G.mode == 0 || G.mode == 3
+    if (idle || G.mode == 2) {
+        return 12 + (G.tick / 3) % 4
+    }
+    return (G.tick / 2) % 4
+}
+
+Bool playerFlip() {
+    return G.dir == 0
+}
+
+// ---------------------------------------------------------------- main
+
+void addImg(String src) {
+    var im = Image(src)
+    var ims = G.imgs
+    ims.add(im)
+}
+
+main() {
+    initGlobals()
+
+    var w = Window("Byte Eater")
+    w.size(G.CW + 40, 700)
+
+    var title = Label("BYTE EATER")
+    title.bold = true
+    title.setFontSize(22)
+    title.setColor(Color(255, 214, 90))
+    w.bind(title)
+
+    var hs = Label("")
+    hs.bold = true
+    hs.setFontSize(16)
+    hs.setColor(Color(140, 240, 255))
+    w.bind(hs)
+
+    var hm = Label("")
+    hm.setFontSize(14)
+    hm.setColor(Color(150, 160, 210))
+    w.bind(hm)
+
+    var c = Canvas(G.CW, G.CH)
+    w.bind(c)
+
+    var padRow = Row(listOf(
+        Button("◀", () -> press(0)),
+        Button("▶", () -> press(1)),
+        Button("▲", () -> press(2)),
+        Button("▼", () -> press(3)),
+        Button("pausa", () -> togglePause()),
+        Button("novo jogo", () -> newGame())))
+    w.bind(padRow)
+
+    var hint = Label("mova com os botoes; coma os bytes; evite os bugs; bytes azuis grandes assustam os bugs")
+    hint.setFontSize(12)
+    hint.setColor(Color(120, 130, 170))
+    w.bind(hint)
+
+    addImg("sprites/player_run_0.png")
+    addImg("sprites/player_run_1.png")
+    addImg("sprites/player_run_2.png")
+    addImg("sprites/player_run_3.png")
+    addImg("sprites/player_alt_0.png")
+    addImg("sprites/player_alt_1.png")
+    addImg("sprites/player_alt_2.png")
+    addImg("sprites/player_alt_3.png")
+    addImg("sprites/player_byte_0.png")
+    addImg("sprites/player_byte_1.png")
+    addImg("sprites/player_byte_2.png")
+    addImg("sprites/player_byte_3.png")
+    addImg("sprites/player_zzz_0.png")
+    addImg("sprites/player_zzz_1.png")
+    addImg("sprites/player_zzz_2.png")
+    addImg("sprites/player_zzz_3.png")
+    addImg("sprites/bug_blue_0.png")
+    addImg("sprites/bug_blue_1.png")
+    addImg("sprites/bug_blue_2.png")
+    addImg("sprites/bug_blue_3.png")
+    addImg("sprites/bug_pink_0.png")
+    addImg("sprites/bug_pink_1.png")
+    addImg("sprites/bug_orange_0.png")
+    addImg("sprites/bug_orange_1.png")
+
+    var bs = G.bugs
+    bs.add(Bug(0, 0))
+    bs.add(Bug(1, 1))
+    bs.add(Bug(2, 2))
+
+    G.hi = 0
+    newGame()
+
+    w.show()
+
+    // One place where Canvas/Label handles exist (constructor locals):
+    // capture them in this loop lambda. Pure logic runs in tickState(),
+    // which writes a draw-op list drained here.
+    time.interval(100, () -> {
+        if (!G.busy) {
+            G.busy = true
+            tickState()
+
+            var ops = listOf<Int>()
+            buildScene(ops)
+
+            var bg = Color(4, 6, 16)
+            var wall = Color(32, 48, 150)
+            var wallHi = Color(56, 82, 205)
+            var pellet = Color(255, 214, 90)
+            var power = Color(110, 220, 255)
+            var white = Color(255, 255, 255)
+            var black = Color(0, 0, 0)
+
+            var n = 0
+            while (n < ops.size()) {
+                var k = ops.get(n)
+                if (k == 1) {
+                    var cc = bg
+                    var code = ops.get(n + 5)
+                    if (code == 1) { cc = wall }
+                    if (code == 2) { cc = wallHi }
+                    if (code == 3) { cc = pellet }
+                    if (code == 4) { cc = power }
+                    if (code == 5) { cc = white }
+                    if (code == 6) { cc = black }
+                    c.setFill(cc)
+                    c.beginPath()
+                    c.moveTo(ops.get(n + 1), ops.get(n + 2))
+                    c.lineTo(ops.get(n + 3), ops.get(n + 2))
+                    c.lineTo(ops.get(n + 3), ops.get(n + 4))
+                    c.lineTo(ops.get(n + 1), ops.get(n + 4))
+                    c.closePath()
+                    c.fill()
+                    n = n + 6
+                }
+                if (k == 2) {
+                    c.beginPath()
+                    n = n + 1
+                }
+                if (k == 3) {
+                    c.moveTo(ops.get(n + 1), ops.get(n + 2))
+                    n = n + 3
+                }
+                if (k == 4) {
+                    c.lineTo(ops.get(n + 1), ops.get(n + 2))
+                    n = n + 3
+                }
+                if (k == 5) {
+                    c.arc(ops.get(n + 1), ops.get(n + 2), ops.get(n + 3), 0.0, 6.28318)
+                    n = n + 4
+                }
+                if (k == 6) {
+                    var cc = bg
+                    var code = ops.get(n + 1)
+                    if (code == 1) { cc = wall }
+                    if (code == 2) { cc = wallHi }
+                    if (code == 3) { cc = pellet }
+                    if (code == 4) { cc = power }
+                    if (code == 5) { cc = white }
+                    if (code == 6) { cc = black }
+                    c.setFill(cc)
+                    c.fill()
+                    n = n + 2
+                }
+                if (k == 7) {
+                    var alpha = ops.get(n + 5)
+                    if (alpha < 100) {
+                        c.setGlobalAlpha(alpha / 100.0)
+                    }
+                    var flip = ops.get(n + 4) == 1
+                    if (!flip) {
+                        c.drawImage(ops.get(n + 1), ops.get(n + 2), ops.get(n + 3))
+                    } else {
+                        c.save()
+                        c.transform(-1.0, 0.0, 0.0, 1.0, 0.0 + ops.get(n + 2) + 64, 0.0)
+                        c.drawImage(ops.get(n + 1), 0, 0)
+                        c.restore()
+                    }
+                    if (alpha < 100) {
+                        c.setGlobalAlpha(1.0)
+                    }
+                    n = n + 6
+                }
+                if (k == 8) {
+                    c.setGlobalAlpha(ops.get(n + 1) / 100.0)
+                    n = n + 2
+                }
+            }
+
+            // HUD labels
+            var scoreTxt = "pontos " + pad(G.score, 6)
+            scoreTxt = scoreTxt + "   nivel " + G.level
+            scoreTxt = scoreTxt + "   vidas " + G.lives
+            scoreTxt = scoreTxt + "   recorde " + pad(G.hi, 6)
+            if (scoreTxt != G.lastHud) {
+                hs.text = scoreTxt
+                G.lastHud = scoreTxt
+            }
+            if (G.msg != G.lastMsg) {
+                hm.text = G.msg
+                G.lastMsg = G.msg
+            }
+            G.busy = false
+        }
+    })
+
+    println("byte eater running")
+}

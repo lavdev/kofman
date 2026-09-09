@@ -1,0 +1,62 @@
+// Drawing operation helpers.
+// Canvas-specific draining stays in the main loop because kofjs requires
+// widget handles to remain in their constructor/capture scope.
+
+Int opMt(List<Int> ops, Int x, Int y) {
+    ops.add(3)
+    ops.add(x)
+    ops.add(y)
+    return 0
+}
+
+Int opRect(List<Int> ops, Int x0, Int y0, Int x1, Int y1, Int code) {
+    ops.add(1)
+    ops.add(x0)
+    ops.add(y0)
+    ops.add(x1)
+    ops.add(y1)
+    ops.add(code)
+    return 0
+}
+
+Int opBegin(List<Int> ops) {
+    ops.add(2)
+    return 0
+}
+
+Int opLt(List<Int> ops, Int x, Int y) {
+    ops.add(4)
+    ops.add(x)
+    ops.add(y)
+    return 0
+}
+
+Int opArc(List<Int> ops, Int x, Int y, Int r) {
+    ops.add(5)
+    ops.add(x)
+    ops.add(y)
+    ops.add(r)
+    return 0
+}
+
+Int opFill(List<Int> ops, Int code) {
+    ops.add(6)
+    ops.add(code)
+    return 0
+}
+
+Int opSpr(List<Int> ops, Int image, Int x, Int y, Int flip, Int alpha) {
+    ops.add(7)
+    ops.add(image)
+    ops.add(x)
+    ops.add(y)
+    ops.add(flip)
+    ops.add(alpha)
+    return 0
+}
+
+Int opAlpha(List<Int> ops, Int a) {
+    ops.add(8)
+    ops.add(a)
+    return 0
+}
