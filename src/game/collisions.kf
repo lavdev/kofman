@@ -1,0 +1,44 @@
+// Player/bug collision resolution and life-cycle consequences.
+
+void killPlayer() {
+    G.lives = G.lives - 1
+    if (G.lives < 0) {
+        G.lives = 0
+        G.mode = 3
+        G.modeT = 0
+        if (G.score > G.hi) {
+            G.hi = G.score
+        }
+        G.msg = "fim de jogo! pontos " + G.score + "  clique uma seta para jogar de novo"
+        return
+    }
+    G.mode = 2
+    G.modeT = 14
+    G.msg = "vida perdida!"
+}
+
+void checkCollisions() {
+    if (G.mode != 1) {
+        return
+    }
+    var bs = G.bugs
+    for (var b in bs) {
+        var dx = b.px - G.px
+        var dy = b.py - G.py
+        if (dx * dx + dy * dy < 36 * 36) {
+            if (b.st == 1) {
+                b.st = 2
+                b.last = 0
+                G.score = G.score + 200
+                G.msg = "bug devorado! +200"
+                chooseBugTarget(b)
+                commitBug(b)
+            } else {
+                if (b.st != 2) {
+                    killPlayer()
+                    return
+                }
+            }
+        }
+    }
+}
