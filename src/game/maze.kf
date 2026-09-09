@@ -1,0 +1,57 @@
+// Maze state and level lifecycle.
+
+Char glyph(Int x, Int y) {
+    var rows = G.cur
+    var row = rows.get(y)
+    return row.charAt(x)
+}
+
+Bool isWallAt(Int x, Int y) {
+    if (x < 0 || y < 0 || x >= G.COLS || y >= G.ROWS) {
+        return true
+    }
+    return glyph(x, y) == '#'
+}
+
+Bool isFloorAt(Int x, Int y) {
+    return !isWallAt(x, y)
+}
+
+void clearCell(Int x, Int y) {
+    var rows = G.cur
+    var row = rows.get(y)
+    var left = row.substring(0, x)
+    var right = row.substring(x + 1)
+    rows.set(y, left + " " + right)
+}
+
+void buildCur() {
+    var fresh = listOf<String>()
+    for (var row in G.maze) {
+        fresh.add(row)
+    }
+    G.cur = fresh
+}
+
+void initLevel() {
+    buildCur()
+    clearCell(7, 5)
+    clearCell(8, 5)
+    clearCell(7, 6)
+    clearCell(7, 9)
+    G.pelletsLeft = 0
+    var y = 0
+    while (y < G.ROWS) {
+        var x = 0
+        while (x < G.COLS) {
+            if (glyph(x, y) == '.') {
+                G.pelletsLeft = G.pelletsLeft + 1
+            }
+            x = x + 1
+        }
+        y = y + 1
+    }
+    resetActors()
+    G.fright = 0
+    G.modeT = 0
+}
