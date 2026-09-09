@@ -1,0 +1,33 @@
+// Commands that control the lifecycle of a game session.
+
+void press(Int d) {
+    G.want = d
+    if (G.mode == 0 || G.mode == 3) {
+        newGame()
+        G.mode = 1
+        G.modeT = 0
+        G.msg = ""
+    }
+}
+
+void togglePause() {
+    if (G.mode == 1) {
+        G.mode = 5
+        G.msg = "pausa — clique pausa para voltar"
+    } else {
+        if (G.mode == 5) {
+            G.mode = 1
+            G.msg = ""
+        }
+    }
+}
+
+void newGame() {
+    G.score = 0
+    G.lives = 2
+    G.level = 1
+    initLevel()
+    G.mode = 0
+    G.tick = 0
+    G.msg = "pronto? clique uma seta para comecar"
+}
