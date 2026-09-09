@@ -1,0 +1,43 @@
+// Game simulation loop and mode transitions.
+
+void tickState() {
+    G.tick = G.tick + 1
+    G.modeT = G.modeT - 1
+    if (G.fright > 0) {
+        G.fright = G.fright - 1
+        if (G.fright == 0) {
+            frightOff()
+        }
+    }
+
+    if (G.mode == 1) {
+        G.speed = playerSpeed()
+        var restX = G.ptx * G.T + 32
+        var restY = G.pty * G.T + 32
+        if (!G.moving && G.px == restX && G.py == restY) {
+            movePlayer()
+        }
+        stepPlayer()
+        if (G.mode == 1) {
+            var bs = G.bugs
+            for (var b in bs) {
+                stepBug(b)
+            }
+            checkCollisions()
+        }
+    }
+
+    if (G.mode == 2 && G.modeT <= 0) {
+        resetActors()
+        G.mode = 1
+        G.modeT = 0
+        G.msg = ""
+    }
+
+    if (G.mode == 4 && G.modeT <= 0) {
+        G.level = G.level + 1
+        initLevel()
+        G.mode = 1
+        G.msg = "nivel " + G.level
+    }
+}
