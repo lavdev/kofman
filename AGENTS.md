@@ -136,7 +136,19 @@ assets/
   sprites/               24 PNGs 64x64 transparentes (gerados)
   web-input.js           ponte teclado->d-pad (injetada no index.html)
   patch_web.sh           copia web-input.js e injeta <script> no index.html
-src/game/game.kf         frontend kofjs (jogo inteiro, ~1050 linhas)
+src/game/game.kf         bootstrap/UI e drain do Canvas
+src/game/state.kf        estado global e modelo de Bug
+src/game/actors.kf       criação e reset dos atores
+src/game/maze.kf         mapa e ciclo de níveis
+src/game/player.kf       movimento e coleta do jogador
+src/game/bugs.kf         IA e movimento dos bugs
+src/game/collisions.kf   colisões e vidas
+src/game/simulation.kf   loop de simulação e transições
+src/game/game_flow.kf    comandos de partida e pausa
+src/game/sprites.kf      catálogo e carregamento de sprites
+src/game/hud.kf          formatação pura do HUD
+src/game/scene.kf        composição pura da cena
+src/game/draw_ops.kf     operações abstratas de desenho
 src/server/server.kf     backend kof.web/JVM (~190 linhas)
 web/                     saída de `make web` (Default.mjs + runtime + sprites)
 data/scores.json         placar persistido (criado em runtime pelo servidor)

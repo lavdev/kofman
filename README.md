@@ -196,7 +196,8 @@ Pontos centrais (detalhes no AGENTS.md):
 
 ```
 assets/            atlas + slice.sh + sprites/ (24 PNG) + web-input.js/patch_web.sh
-src/game/game.kf   frontend kofjs (jogo completo)
+src/game/           módulos de estado, simulação, atores e renderização
+src/game/game.kf    bootstrap/UI e drain do Canvas
 src/server/server.kf  backend kof.web + placar (kof.io)
 web/               build estático (make web)
 data/scores.json   placar persistido (runtime)

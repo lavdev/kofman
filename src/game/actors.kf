@@ -1,4 +1,11 @@
-// Reset positions and transient state for all actors.
+// Actor creation and reset of transient state.
+
+void initBugs() {
+    var bs = G.bugs
+    bs.add(Bug(0, 0))
+    bs.add(Bug(1, 1))
+    bs.add(Bug(2, 2))
+}
 
 void resetActors() {
     G.ptx = 7

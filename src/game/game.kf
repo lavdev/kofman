@@ -70,10 +70,7 @@ main() {
 
     loadSprites()
 
-    var bs = G.bugs
-    bs.add(Bug(0, 0))
-    bs.add(Bug(1, 1))
-    bs.add(Bug(2, 2))
+    initBugs()
 
     G.hi = 0
     newGame()
