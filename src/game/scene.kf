@@ -40,51 +40,39 @@ void buildScene(List<Int> ops) {
     }
     opFill(ops, 2)
 
-    // pellets
-    opBegin(ops)
+    // geek pellets: small amber chips with a binary-looking core
     y = 0
     while (y < G.ROWS) {
         var x = 0
         while (x < G.COLS) {
             if (glyph(x, y) == '.') {
-                opMt(ops, x * G.T + 37, y * G.T + 32)
-                opArc(ops, x * G.T + 32, y * G.T + 32, 5)
+                var px = x * G.T
+                var py = y * G.T
+                opRect(ops, px + 27, py + 27, px + 37, py + 37, 3)
+                opRect(ops, px + 30, py + 30, px + 32, py + 34, 6)
+                opRect(ops, px + 34, py + 30, px + 35, py + 34, 6)
             }
             x = x + 1
         }
         y = y + 1
     }
-    opFill(ops, 3)
 
-    // power bytes
-    opBegin(ops)
+    // power bytes: larger cyan data packets with a 01 core
     y = 0
     while (y < G.ROWS) {
         var x = 0
         while (x < G.COLS) {
             if (glyph(x, y) == 'o') {
-                opMt(ops, x * G.T + 45, y * G.T + 32)
-                opArc(ops, x * G.T + 32, y * G.T + 32, 13)
+                var bx = x * G.T
+                var by = y * G.T
+                opRect(ops, bx + 21, by + 21, bx + 43, by + 43, 4)
+                opRect(ops, bx + 26, by + 26, bx + 29, by + 38, 5)
+                opRect(ops, bx + 34, by + 26, bx + 37, by + 38, 5)
             }
             x = x + 1
         }
         y = y + 1
     }
-    opFill(ops, 4)
-    opBegin(ops)
-    y = 0
-    while (y < G.ROWS) {
-        var x = 0
-        while (x < G.COLS) {
-            if (glyph(x, y) == 'o') {
-                opMt(ops, x * G.T + 37, y * G.T + 32)
-                opArc(ops, x * G.T + 32, y * G.T + 32, 5)
-            }
-            x = x + 1
-        }
-        y = y + 1
-    }
-    opFill(ops, 5)
 
     // pause overlay
     if (G.mode == 5) {
