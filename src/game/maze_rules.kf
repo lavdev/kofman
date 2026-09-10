@@ -1,0 +1,66 @@
+// Pure maze validation rules.
+
+Bool mazeHasDimensions(List<String> rows, Int cols, Int rowCount) {
+    if (rows.size() != rowCount) {
+        return false
+    }
+    for (var row in rows) {
+        if (row.length() != cols) {
+            return false
+        }
+    }
+    return true
+}
+
+Bool mazeHasSolidBorder(List<String> rows, Int cols, Int rowCount) {
+    if (!mazeHasDimensions(rows, cols, rowCount)) {
+        return false
+    }
+    var x = 0
+    while (x < cols) {
+        if (rows.get(0).charAt(x) != '#') {
+            return false
+        }
+        if (rows.get(rowCount - 1).charAt(x) != '#') {
+            return false
+        }
+        x = x + 1
+    }
+    var y = 1
+    while (y < rowCount - 1) {
+        if (rows.get(y).charAt(0) != '#') {
+            return false
+        }
+        if (rows.get(y).charAt(cols - 1) != '#') {
+            return false
+        }
+        y = y + 1
+    }
+    return true
+}
+
+test "maze dimensions and border are valid" {
+    var rows = listOf<String>()
+    rows.add("####")
+    rows.add("#..#")
+    rows.add("####")
+    assert(mazeHasDimensions(rows, 4, 3), "dimensions")
+    assert(mazeHasSolidBorder(rows, 4, 3), "solid border")
+}
+
+test "maze rejects invalid dimensions" {
+    var rows = listOf<String>()
+    rows.add("####")
+    rows.add("#.#")
+    rows.add("####")
+    assert(!mazeHasDimensions(rows, 4, 3), "short row rejected")
+    assert(!mazeHasDimensions(rows, 4, 4), "missing row rejected")
+}
+
+test "maze rejects an open border" {
+    var rows = listOf<String>()
+    rows.add("####")
+    rows.add("#.. ")
+    rows.add("####")
+    assert(!mazeHasSolidBorder(rows, 4, 3), "open border rejected")
+}
