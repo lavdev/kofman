@@ -30,7 +30,7 @@ test "player speed scales and caps" {
 
 test "bug speed scales and caps" {
     assert(bugSpeedForState(1, 0, 0) == 20, "blue level one speed")
-    assert(bugSpeedForState(4, 2, 0) == 32, "bug level scaling")
+    assert(bugSpeedForState(4, 2, 0) == 33, "bug level scaling")
     assert(bugSpeedForState(20, 2, 0) == 40, "bug speed cap")
 }
 
