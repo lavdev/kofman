@@ -26,11 +26,6 @@
 //   - a top-level function named `at` collides with the scheduler builtin
 //     (emits kofSchedulerAt) -> the cell reader is named `glyph`.
 
-Int img(Int base) {
-    var ims = G.imgs
-    return ims.get(base)
-}
-
 String pad(Int v, Int w) {
     var s = "" + v
     while (s.length() < w) {
@@ -40,12 +35,6 @@ String pad(Int v, Int w) {
 }
 
 // ---------------------------------------------------------------- main
-
-void addImg(String src) {
-    var im = Image(src)
-    var ims = G.imgs
-    ims.add(im)
-}
 
 main() {
     initGlobals()
@@ -87,30 +76,7 @@ main() {
     hint.setColor(Color(120, 130, 170))
     w.bind(hint)
 
-    addImg("sprites/player_run_0.png")
-    addImg("sprites/player_run_1.png")
-    addImg("sprites/player_run_2.png")
-    addImg("sprites/player_run_3.png")
-    addImg("sprites/player_alt_0.png")
-    addImg("sprites/player_alt_1.png")
-    addImg("sprites/player_alt_2.png")
-    addImg("sprites/player_alt_3.png")
-    addImg("sprites/player_byte_0.png")
-    addImg("sprites/player_byte_1.png")
-    addImg("sprites/player_byte_2.png")
-    addImg("sprites/player_byte_3.png")
-    addImg("sprites/player_zzz_0.png")
-    addImg("sprites/player_zzz_1.png")
-    addImg("sprites/player_zzz_2.png")
-    addImg("sprites/player_zzz_3.png")
-    addImg("sprites/bug_blue_0.png")
-    addImg("sprites/bug_blue_1.png")
-    addImg("sprites/bug_blue_2.png")
-    addImg("sprites/bug_blue_3.png")
-    addImg("sprites/bug_pink_0.png")
-    addImg("sprites/bug_pink_1.png")
-    addImg("sprites/bug_orange_0.png")
-    addImg("sprites/bug_orange_1.png")
+    loadSprites()
 
     var bs = G.bugs
     bs.add(Bug(0, 0))
