@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  static:
+    name: Static checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate shell scripts
+        run: bash -n assets/slice.sh assets/patch_web.sh tests/api-smoke.sh
+      - name: Check repository hygiene
+        run: |
+          test -f LICENSE
+          test -f AGENTS.md
+          test ! -d data
+
+  kof:
+    name: Kof build and tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check Kof installation
+        run: |
+          command -v kof
+          kof info
+      - name: Run project verification
+        run: make verify

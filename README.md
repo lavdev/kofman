@@ -111,6 +111,16 @@ make api-smoke
 
 Para testar outra instância, use `BASE_URL=http://host:porta make api-smoke`.
 
+Para executar todas as verificações locais:
+
+```bash
+make verify
+```
+
+O workflow de CI repete essas verificações em um ambiente que tenha o Kof
+0.3.2-beta instalado, além de validar scripts, licença e higiene do
+repositório.
+
 ---
 
 ## Como rodar

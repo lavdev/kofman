@@ -6,7 +6,7 @@
 KOF ?= kof
 PORT ?= 8080
 
-.PHONY: all slice web serve test api-smoke run clean
+.PHONY: all slice web serve test verify api-smoke run clean
 
 all: web
 
@@ -36,6 +36,12 @@ test:
 	$(KOF) test src/game/movement_rules.kf --target jvm
 	$(KOF) test src/game/pellets.kf --target jvm
 	$(KOF) test src/game/state.kf --target jvm
+
+# Full local verification used by contributors and CI.
+verify: test
+	build_dir=$$(mktemp -d /tmp/byte-eater-verify-build.XXXXXX) && $(KOF) build src/game --target=js --output "$$build_dir"
+	$(KOF) check src/server
+	bash -n assets/slice.sh assets/patch_web.sh tests/api-smoke.sh
 
 # API smoke test; start `make serve` in another terminal first.
 api-smoke:
