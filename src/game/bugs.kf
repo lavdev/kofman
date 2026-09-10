@@ -16,10 +16,8 @@ Int pickDir(Bug b, Int targX, Int targY, Int rnd) {
     while (d < 4) {
         var nx = b.tx
         var ny = b.ty
-        if (d == 0) { nx = nx - 1 }
-        if (d == 1) { nx = nx + 1 }
-        if (d == 2) { ny = ny - 1 }
-        if (d == 3) { ny = ny + 1 }
+        nx = nextX(nx, d)
+        ny = nextY(ny, d)
         if (isFloorAt(nx, ny) && d != opposite(b.last)) {
             opts.add(d)
         }
@@ -36,10 +34,8 @@ Int pickDir(Bug b, Int targX, Int targY, Int rnd) {
     for (var o in opts) {
         var nx = b.tx
         var ny = b.ty
-        if (o == 0) { nx = nx - 1 }
-        if (o == 1) { nx = nx + 1 }
-        if (o == 2) { ny = ny - 1 }
-        if (o == 3) { ny = ny + 1 }
+        nx = nextX(nx, o)
+        ny = nextY(ny, o)
         var dd = dist2(nx, ny, targX, targY)
         if (dd < bestD) {
             bestD = dd
@@ -75,10 +71,8 @@ void chooseBugTarget(Bug b) {
 void commitBug(Bug b) {
     var nx = b.tx
     var ny = b.ty
-    if (b.dir == 0) { nx = b.tx - 1 }
-    if (b.dir == 1) { nx = b.tx + 1 }
-    if (b.dir == 2) { ny = b.ty - 1 }
-    if (b.dir == 3) { ny = b.ty + 1 }
+    nx = nextX(nx, b.dir)
+    ny = nextY(ny, b.dir)
     if (isFloorAt(nx, ny)) {
         b.tx = nx
         b.ty = ny

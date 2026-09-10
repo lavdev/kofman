@@ -8,19 +8,15 @@ void movePlayer() {
     // resting on a tile center: try to turn, then commit the next tile
     var turnX = G.ptx
     var turnY = G.pty
-    if (G.want == 0) { turnX = G.ptx - 1 }
-    if (G.want == 1) { turnX = G.ptx + 1 }
-    if (G.want == 2) { turnY = G.pty - 1 }
-    if (G.want == 3) { turnY = G.pty + 1 }
+    turnX = nextX(G.ptx, G.want)
+    turnY = nextY(G.pty, G.want)
     if (isFloorAt(turnX, turnY)) {
         G.dir = G.want
     }
     var aheadX = G.ptx
     var aheadY = G.pty
-    if (G.dir == 0) { aheadX = G.ptx - 1 }
-    if (G.dir == 1) { aheadX = G.ptx + 1 }
-    if (G.dir == 2) { aheadY = G.pty - 1 }
-    if (G.dir == 3) { aheadY = G.pty + 1 }
+    aheadX = nextX(G.ptx, G.dir)
+    aheadY = nextY(G.pty, G.dir)
     if (!isFloorAt(aheadX, aheadY)) {
         G.moving = false
         return

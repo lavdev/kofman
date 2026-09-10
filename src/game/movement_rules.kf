@@ -1,0 +1,27 @@
+// Pure grid movement primitives.
+
+Int nextX(Int x, Int direction) {
+    if (direction == 0) { return x - 1 }
+    if (direction == 1) { return x + 1 }
+    return x
+}
+
+Int nextY(Int y, Int direction) {
+    if (direction == 2) { return y - 1 }
+    if (direction == 3) { return y + 1 }
+    return y
+}
+
+test "horizontal directions change only x" {
+    assert(nextX(5, 0) == 4, "left x")
+    assert(nextX(5, 1) == 6, "right x")
+    assert(nextY(5, 0) == 5, "left y")
+    assert(nextY(5, 1) == 5, "right y")
+}
+
+test "vertical directions change only y" {
+    assert(nextY(5, 2) == 4, "up y")
+    assert(nextY(5, 3) == 6, "down y")
+    assert(nextX(5, 2) == 5, "up x")
+    assert(nextX(5, 3) == 5, "down x")
+}

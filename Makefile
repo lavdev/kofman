@@ -32,6 +32,7 @@ test:
 	$(KOF) test src/game/difficulty.kf --target jvm
 	$(KOF) test src/game/directions.kf --target jvm
 	$(KOF) test src/game/maze_rules.kf --target jvm
+	$(KOF) test src/game/movement_rules.kf --target jvm
 	$(KOF) test src/game/pellets.kf --target jvm
 	$(KOF) test src/game/state.kf --target jvm
 
