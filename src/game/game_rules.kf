@@ -1,0 +1,33 @@
+// Pure rules for game-session transitions.
+
+Int livesAfterDeath(Int lives) {
+    return lives - 1
+}
+
+Bool deathEndsGame(Int livesAfterDeath) {
+    return livesAfterDeath < 0
+}
+
+Int frightDuration(Int level) {
+    var duration = 70 - (level - 1) * 8
+    if (duration < 25) {
+        duration = 25
+    }
+    return duration
+}
+
+test "three deaths end a session" {
+    var lives = 2
+    lives = livesAfterDeath(lives)
+    assert(lives == 1 && !deathEndsGame(lives), "first death")
+    lives = livesAfterDeath(lives)
+    assert(lives == 0 && !deathEndsGame(lives), "second death")
+    lives = livesAfterDeath(lives)
+    assert(lives == -1 && deathEndsGame(lives), "third death")
+}
+
+test "fright duration scales and has a minimum" {
+    assert(frightDuration(1) == 70, "level one fright")
+    assert(frightDuration(4) == 46, "level scaling")
+    assert(frightDuration(20) == 25, "fright minimum")
+}

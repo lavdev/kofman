@@ -1,8 +1,8 @@
 // Player/bug collision resolution and life-cycle consequences.
 
 void killPlayer() {
-    G.lives = G.lives - 1
-    if (G.lives < 0) {
+    G.lives = livesAfterDeath(G.lives)
+    if (deathEndsGame(G.lives)) {
         G.lives = 0
         G.mode = 3
         G.modeT = 0
