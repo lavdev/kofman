@@ -1,0 +1,9 @@
+/* Presentation scale for the fixed 1024x768 arcade canvas. */
+#kof-root {
+  zoom: 0.82;
+  align-items: center;
+}
+
+.kof-window {
+  transform-origin: top center;
+}

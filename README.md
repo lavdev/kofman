@@ -93,6 +93,10 @@ make web
 (2) compila `src/game/game.kf` para `web/` (kofjs), (3) injeta a ponte de
 teclado (`keyboard_bridge.js`) no `index.html` gerado.
 
+A apresentação usa uma escala CSS de 82% para o canvas fixo de 1024×768,
+mantendo a resolução interna e deixando a experiência mais confortável em
+telas menores. Esse ajuste fica em `assets/retro.css`.
+
 ### Testes
 
 ```bash
