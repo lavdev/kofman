@@ -1,0 +1,5 @@
+// HTTP/domain records used by the scoreboard service.
+
+record Score(String name, Int score, Int level)
+record Submit(String name, Int score, Int level)
+record Result(Int code, String payload)

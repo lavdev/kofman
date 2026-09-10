@@ -1,0 +1,70 @@
+// Scoreboard input validation and submission workflow.
+
+Int limitFrom(String? raw) {
+    if (raw == null) {
+        return 10
+    }
+    var parsed = raw.toInt()
+    if (parsed > 0 && parsed <= 100) {
+        return parsed
+    }
+    return 10
+}
+
+Bool nameOk(String name) {
+    if (name.length() < 1 || name.length() > 12) {
+        return false
+    }
+    var i = 0
+    while (i < name.length()) {
+        var ch = name.charAt(i)
+        var okChar = ch >= 'a' && ch <= 'z'
+        if (!okChar) {
+            okChar = ch >= 'A' && ch <= 'Z'
+        }
+        if (!okChar) {
+            okChar = ch >= '0' && ch <= '9'
+        }
+        if (!okChar) {
+            okChar = ch == ' '
+        }
+        if (!okChar) {
+            return false
+        }
+        i = i + 1
+    }
+    return true
+}
+
+Result validate(Submit s) {
+    if (!nameOk(s.name)) {
+        return Result(400, "{\"error\": \"name must be 1-12 chars [a-zA-Z0-9 ]\"}")
+    }
+    if (s.score < 0 || s.score > 9999999) {
+        return Result(400, "{\"error\": \"score out of range\"}")
+    }
+    if (s.level < 1 || s.level > 999) {
+        return Result(400, "{\"error\": \"level out of range\"}")
+    }
+    return Result(0, "")
+}
+
+Result doSubmit(String body) {
+    if (body == null || body.length() == 0) {
+        return Result(400, "{\"error\": \"empty body\"}")
+    }
+    var parsed = json.decode<Submit>(body)
+    if (parsed == null) {
+        return Result(400, "{\"error\": \"invalid json\"}")
+    }
+    var bad = validate(parsed)
+    if (bad.code != 0) {
+        return bad
+    }
+    var list = loadScores()
+    list.add(Score(parsed.name, parsed.score, parsed.level))
+    sortDesc(list)
+    var trimmed = head(list, 50)
+    saveScores(trimmed)
+    return Result(201, json.encode(head(trimmed, 10)))
+}
