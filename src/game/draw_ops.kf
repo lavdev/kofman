@@ -60,3 +60,22 @@ Int opAlpha(List<Int> ops, Int a) {
     ops.add(a)
     return 0
 }
+
+test "moveTo operation encodes opcode and coordinates" {
+    var ops = listOf<Int>()
+    opMt(ops, 12, 34)
+    assert(ops.size() == 3, "moveTo has three fields")
+    assert(ops.get(0) == 3, "moveTo opcode")
+    assert(ops.get(1) == 12, "moveTo x")
+    assert(ops.get(2) == 34, "moveTo y")
+}
+
+test "sprite operation encodes all fields" {
+    var ops = listOf<Int>()
+    opSpr(ops, 7, 10, 20, 1, 55)
+    assert(ops.size() == 6, "sprite has six fields")
+    assert(ops.get(0) == 7, "sprite opcode")
+    assert(ops.get(1) == 7, "sprite image")
+    assert(ops.get(4) == 1, "sprite flip")
+    assert(ops.get(5) == 55, "sprite alpha")
+}

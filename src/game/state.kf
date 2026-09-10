@@ -89,3 +89,12 @@ void initGlobals() {
     G.px = 7 * G.T + 32
     G.py = 9 * G.T + 32
 }
+
+test "bug variants have distinct homes and scatter targets" {
+    var blue = Bug(0, 0)
+    var pink = Bug(1, 1)
+    var orange = Bug(2, 2)
+    assert(blue.homeX == 7 && blue.homeY == 5, "blue home")
+    assert(pink.homeX == 8 && pink.scatterX == 1, "pink targets")
+    assert(orange.homeY == 6 && orange.rightArt, "orange art and home")
+}

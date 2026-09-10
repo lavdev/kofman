@@ -6,7 +6,7 @@
 KOF ?= kof
 PORT ?= 8080
 
-.PHONY: all slice web serve run clean
+.PHONY: all slice web serve test run clean
 
 all: web
 
@@ -25,6 +25,11 @@ web: slice
 # 3. run the kof.web backend on $(PORT) (JVM): serves web/ + /api/*
 serve: web
 	$(KOF) serve src/server/server.kf --port $(PORT)
+
+# Pure module tests. Kof's test runner compiles each file independently.
+test:
+	$(KOF) test src/game/draw_ops.kf --target jvm
+	$(KOF) test src/game/state.kf --target jvm
 
 # quick local preview without the backend (python http server)
 preview: web

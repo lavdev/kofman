@@ -93,6 +93,16 @@ make web
 (2) compila `src/game/game.kf` para `web/` (kofjs), (3) injeta a ponte de
 teclado (`keyboard_bridge.js`) no `index.html` gerado.
 
+### Testes
+
+```bash
+make test
+```
+
+Os testes ficam junto dos módulos puros que protegem. Como o runner do Kof
+compila cada arquivo de teste isoladamente, módulos com dependências são
+testados depois que suas regras puras forem extraídas para unidades próprias.
+
 ---
 
 ## Como rodar
