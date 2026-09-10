@@ -1,0 +1,28 @@
+// Pure player animation frame selection.
+
+Int activePlayerFrame(Int tick) {
+    var phase = (tick / 2) % 12
+    if (phase < 4) {
+        return phase
+    }
+    if (phase < 8) {
+        return 4 + phase - 4
+    }
+    return 8 + phase - 8
+}
+
+Int idlePlayerFrame(Int tick) {
+    return 12 + (tick / 3) % 4
+}
+
+test "active animation cycles run, alt and byte frames" {
+    assert(activePlayerFrame(0) == 0, "run frame")
+    assert(activePlayerFrame(8) == 4, "alt frame")
+    assert(activePlayerFrame(16) == 8, "byte frame")
+    assert(activePlayerFrame(24) == 0, "animation loops")
+}
+
+test "idle animation uses zzz frames" {
+    assert(idlePlayerFrame(0) == 12, "first zzz frame")
+    assert(idlePlayerFrame(9) == 15, "zzz progression")
+}

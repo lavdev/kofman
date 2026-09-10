@@ -107,9 +107,9 @@ void arrivePlayer() {
 Int playerFrame() {
     var idle = G.mode == 0 || G.mode == 3
     if (idle || G.mode == 2) {
-        return 12 + (G.tick / 3) % 4
+        return idlePlayerFrame(G.tick)
     }
-    return (G.tick / 2) % 4
+    return activePlayerFrame(G.tick)
 }
 
 Bool playerFlip() {

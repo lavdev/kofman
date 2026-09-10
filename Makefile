@@ -34,6 +34,7 @@ test:
 	$(KOF) test src/game/game_rules.kf --target jvm
 	$(KOF) test src/game/maze_rules.kf --target jvm
 	$(KOF) test src/game/movement_rules.kf --target jvm
+	$(KOF) test src/game/player_animation.kf --target jvm
 	$(KOF) test src/game/pellets.kf --target jvm
 	$(KOF) test src/game/state.kf --target jvm
 

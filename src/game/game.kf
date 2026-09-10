@@ -32,7 +32,7 @@ main() {
     initGlobals()
 
     var w = Window("Byte Eater")
-    w.size(G.CW + 40, 700)
+    w.size(G.CW + 40, 900)
 
     var title = Label("BYTE EATER")
     title.bold = true
