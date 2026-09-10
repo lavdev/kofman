@@ -14,13 +14,6 @@ Int bugSpeed(Bug b) {
     return s
 }
 
-Int opposite(Int d) {
-    if (d == 0) { return 1 }
-    if (d == 1) { return 0 }
-    if (d == 2) { return 3 }
-    return 2
-}
-
 Int dist2(Int x1, Int y1, Int x2, Int y2) {
     var dx = x1 - x2
     var dy = y1 - y2

@@ -1,0 +1,15 @@
+// Direction primitives shared by player and bug movement.
+
+Int opposite(Int d) {
+    if (d == 0) { return 1 }
+    if (d == 1) { return 0 }
+    if (d == 2) { return 3 }
+    return 2
+}
+
+test "opposite direction is symmetric" {
+    assert(opposite(0) == 1, "left opposite must be right")
+    assert(opposite(1) == 0, "right opposite must be left")
+    assert(opposite(2) == 3, "up opposite must be down")
+    assert(opposite(3) == 2, "down opposite must be up")
+}
