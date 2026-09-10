@@ -1,4 +1,4 @@
-# kopman · Byte Eater
+# kofman · Byte Eater
 
 Jogo de labirinto estilo pacman, **fullstack e 100% Kof**: frontend em
 `kof.ui`/Canvas 2D compilado para **kofjs** (roda no browser) e backend em
