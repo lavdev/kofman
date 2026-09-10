@@ -85,17 +85,17 @@ void stepPlayer() {
 
 void arrivePlayer() {
     var ch = glyph(G.ptx, G.pty)
-    if (ch == '.' || ch == 'o') {
-        var wasPower = ch == 'o'
+    if (isPellet(ch)) {
+        var wasPower = isPowerPellet(ch)
         clearCell(G.ptx, G.pty)
         if (wasPower) {
-            G.score = G.score + 50
+            G.score = G.score + pelletScore(ch)
             G.fright = 70 - (G.level - 1) * 8
             if (G.fright < 25) { G.fright = 25 }
             frightOn()
             G.msg = "byte azul! os bugs estao assustados"
         } else {
-            G.score = G.score + 10
+            G.score = G.score + pelletScore(ch)
         }
         G.pelletsLeft = G.pelletsLeft - 1
         if (G.pelletsLeft <= 0) {
