@@ -1,0 +1,17 @@
+// Pure HUD text formatting.
+
+String pad(Int v, Int w) {
+    var s = "" + v
+    while (s.length() < w) {
+        s = "0" + s
+    }
+    return s
+}
+
+String hudText() {
+    var text = "pontos " + pad(G.score, 6)
+    text = text + "   nivel " + G.level
+    text = text + "   vidas " + G.lives
+    text = text + "   recorde " + pad(G.hi, 6)
+    return text
+}

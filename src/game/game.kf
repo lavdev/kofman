@@ -26,14 +26,6 @@
 //   - a top-level function named `at` collides with the scheduler builtin
 //     (emits kofSchedulerAt) -> the cell reader is named `glyph`.
 
-String pad(Int v, Int w) {
-    var s = "" + v
-    while (s.length() < w) {
-        s = "0" + s
-    }
-    return s
-}
-
 // ---------------------------------------------------------------- main
 
 main() {
@@ -184,10 +176,7 @@ main() {
             }
 
             // HUD labels
-            var scoreTxt = "pontos " + pad(G.score, 6)
-            scoreTxt = scoreTxt + "   nivel " + G.level
-            scoreTxt = scoreTxt + "   vidas " + G.lives
-            scoreTxt = scoreTxt + "   recorde " + pad(G.hi, 6)
+            var scoreTxt = hudText()
             if (scoreTxt != G.lastHud) {
                 hs.text = scoreTxt
                 G.lastHud = scoreTxt
