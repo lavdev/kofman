@@ -117,9 +117,10 @@ Para executar todas as verificações locais:
 make verify
 ```
 
-O workflow de CI repete essas verificações em um ambiente que tenha o Kof
-0.3.2-beta instalado, além de validar scripts, licença e higiene do
-repositório.
+O workflow de CI valida scripts, licença e higiene do repositório por padrão.
+Quando o runner do projeto tiver o Kof 0.3.2-beta disponível, configure a
+variável de repositório `KOF_CI=true` para habilitar também build, testes e
+checagem do backend.
 
 ---
 
