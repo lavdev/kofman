@@ -29,6 +29,7 @@ serve: web
 # Pure module tests. Kof's test runner compiles each file independently.
 test:
 	$(KOF) test src/game/draw_ops.kf --target jvm
+	$(KOF) test src/game/difficulty.kf --target jvm
 	$(KOF) test src/game/directions.kf --target jvm
 	$(KOF) test src/game/state.kf --target jvm
 

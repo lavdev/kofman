@@ -1,0 +1,40 @@
+// Pure difficulty rules.
+
+Int playerSpeedForLevel(Int level) {
+    var speed = 26 + (level - 1) * 2
+    if (speed > 44) {
+        speed = 44
+    }
+    return speed
+}
+
+Int bugSpeedForState(Int level, Int id, Int state) {
+    if (state == 2) {
+        return 48
+    }
+    if (state == 1) {
+        return 13
+    }
+    var speed = 20 + (level - 1) * 3 + id * 2
+    if (speed > 40) {
+        speed = 40
+    }
+    return speed
+}
+
+test "player speed scales and caps" {
+    assert(playerSpeedForLevel(1) == 26, "level one speed")
+    assert(playerSpeedForLevel(4) == 32, "level scaling")
+    assert(playerSpeedForLevel(20) == 44, "player speed cap")
+}
+
+test "bug speed scales and caps" {
+    assert(bugSpeedForState(1, 0, 0) == 20, "blue level one speed")
+    assert(bugSpeedForState(4, 2, 0) == 32, "bug level scaling")
+    assert(bugSpeedForState(20, 2, 0) == 40, "bug speed cap")
+}
+
+test "special bug states override difficulty" {
+    assert(bugSpeedForState(20, 2, 1) == 13, "fright speed")
+    assert(bugSpeedForState(1, 0, 2) == 48, "returning speed")
+}

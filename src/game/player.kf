@@ -1,11 +1,7 @@
 // Player movement, pellet collection and player animation.
 
 Int playerSpeed() {
-    var s = 26 + (G.level - 1) * 2
-    if (s > 44) {
-        s = 44
-    }
-    return s
+    return playerSpeedForLevel(G.level)
 }
 
 void movePlayer() {

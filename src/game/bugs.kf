@@ -1,17 +1,7 @@
 // Bug movement, targeting, frightened state and animation.
 
 Int bugSpeed(Bug b) {
-    if (b.st == 2) {
-        return 48
-    }
-    if (b.st == 1) {
-        return 13
-    }
-    var s = 20 + (G.level - 1) * 3 + b.id * 2
-    if (s > 40) {
-        s = 40
-    }
-    return s
+    return bugSpeedForState(G.level, b.id, b.st)
 }
 
 Int dist2(Int x1, Int y1, Int x2, Int y2) {
