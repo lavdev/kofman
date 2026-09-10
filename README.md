@@ -103,6 +103,14 @@ Os testes ficam junto dos módulos puros que protegem. Como o runner do Kof
 compila cada arquivo de teste isoladamente, módulos com dependências são
 testados depois que suas regras puras forem extraídas para unidades próprias.
 
+Com o servidor rodando, a API pode ser verificada com:
+
+```bash
+make api-smoke
+```
+
+Para testar outra instância, use `BASE_URL=http://host:porta make api-smoke`.
+
 ---
 
 ## Como rodar

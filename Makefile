@@ -6,7 +6,7 @@
 KOF ?= kof
 PORT ?= 8080
 
-.PHONY: all slice web serve test run clean
+.PHONY: all slice web serve test api-smoke run clean
 
 all: web
 
@@ -36,6 +36,10 @@ test:
 	$(KOF) test src/game/movement_rules.kf --target jvm
 	$(KOF) test src/game/pellets.kf --target jvm
 	$(KOF) test src/game/state.kf --target jvm
+
+# API smoke test; start `make serve` in another terminal first.
+api-smoke:
+	./tests/api-smoke.sh
 
 # quick local preview without the backend (python http server)
 preview: web
