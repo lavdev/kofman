@@ -9,9 +9,9 @@ String pad(Int v, Int w) {
 }
 
 String hudText() {
-    var text = "pontos " + pad(G.score, 6)
-    text = text + "   nivel " + G.level
-    text = text + "   vidas " + G.lives
-    text = text + "   recorde " + pad(G.hi, 6)
+    var text = "1UP " + pad(G.score, 6)
+    text = text + "   LVL " + G.level
+    text = text + "   LIVES " + G.lives
+    text = text + "   HIGH " + pad(G.hi, 6)
     return text
 }

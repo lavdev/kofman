@@ -34,7 +34,7 @@ main() {
     var w = Window("Byte Eater")
     w.size(G.CW + 40, 900)
 
-    var title = Label("BYTE EATER")
+    var title = Label("BYTE EATER // ARCADE")
     title.bold = true
     title.setFontSize(22)
     title.setColor(Color(255, 214, 90))
@@ -63,7 +63,7 @@ main() {
         Button("novo jogo", () -> newGame())))
     w.bind(padRow)
 
-    var hint = Label("mova com os botoes; coma os bytes; evite os bugs; bytes azuis grandes assustam os bugs")
+    var hint = Label("ARROWS / WASD  •  EAT BYTES  •  AVOID BUGS  •  INSERT COIN: START")
     hint.setFontSize(12)
     hint.setColor(Color(120, 130, 170))
     w.bind(hint)
@@ -88,11 +88,11 @@ main() {
             var ops = listOf<Int>()
             buildScene(ops)
 
-            var bg = Color(4, 6, 16)
-            var wall = Color(32, 48, 150)
-            var wallHi = Color(56, 82, 205)
-            var pellet = Color(255, 214, 90)
-            var power = Color(110, 220, 255)
+            var bg = Color(2, 4, 12)
+            var wall = Color(35, 55, 220)
+            var wallHi = Color(80, 130, 255)
+            var pellet = Color(255, 220, 80)
+            var power = Color(40, 240, 255)
             var white = Color(255, 255, 255)
             var black = Color(0, 0, 0)
 
