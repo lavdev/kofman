@@ -1,0 +1,25 @@
+// Reset positions and transient state for all actors.
+
+void resetActors() {
+    G.ptx = 7
+    G.pty = 9
+    G.px = 7 * G.T + 32
+    G.py = 9 * G.T + 32
+    G.dir = 1
+    G.want = 1
+    G.moving = false
+    G.fright = 0
+    var bs = G.bugs
+    var n = 0
+    while (n < bs.size()) {
+        var b = bs.get(n)
+        b.tx = b.homeX
+        b.ty = b.homeY
+        b.px = b.homeX * G.T + 32
+        b.py = b.homeY * G.T + 32
+        b.dir = 0
+        b.last = 0
+        b.st = 0
+        n = n + 1
+    }
+}

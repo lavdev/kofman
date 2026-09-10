@@ -1,0 +1,91 @@
+// Domain state and actor model.
+
+class G {
+    static List<String> maze = listOf()
+    static List<String> cur = listOf()
+    static Int T = 64
+    static Int COLS = 16
+    static Int ROWS = 12
+    static Int CW = 1024
+    static Int CH = 768
+    static Int ptx = 7
+    static Int pty = 9
+    static Int px = 480
+    static Int py = 608
+    static Int dir = 1
+    static Int want = 1
+    static Int speed = 26
+    static Bool moving = false
+    static Int score = 0
+    static Int lives = 3
+    static Int level = 1
+    static Int pelletsLeft = 0
+    static Int mode = 0
+    static Int modeT = 0
+    static Int tick = 0
+    static Int fright = 0
+    static Int hi = 0
+    static Bool busy = false
+    static String msg = ""
+    static String lastHud = ""
+    static String lastMsg = ""
+    static List<Int> imgs = listOf()
+    static List<Bug> bugs = listOf()
+}
+
+class Bug {
+    Int id
+    Int tx = 0
+    Int ty = 0
+    Int px = 0
+    Int py = 0
+    Int dir = 0
+    Int last = 0
+    Int homeX = 7
+    Int homeY = 5
+    Int scatterX = 14
+    Int scatterY = 1
+    Int kind = 0
+    Int st = 0
+    Bool rightArt = false
+
+    public constructor(Int id, Int kind) {
+        this.id = id
+        this.kind = kind
+        if (kind == 1) {
+            homeX = 8
+            homeY = 5
+            scatterX = 1
+            scatterY = 1
+        }
+        if (kind == 2) {
+            homeX = 7
+            homeY = 6
+            scatterX = 14
+            scatterY = 10
+            rightArt = true
+        }
+    }
+}
+
+void initGlobals() {
+    var m = listOf<String>()
+    m.add("################")
+    m.add("#o............o#")
+    m.add("#.####....####.#")
+    m.add("#.####....####.#")
+    m.add("#.##........##.#")
+    m.add("#.##.##..##.##.#")
+    m.add("#.##........##.#")
+    m.add("#.####....####.#")
+    m.add("#.####....####.#")
+    m.add("#o.....P......o#")
+    m.add("#..............#")
+    m.add("################")
+    G.maze = m
+    G.cur = listOf()
+    G.imgs = listOf()
+    G.bugs = listOf()
+    G.px = 7 * G.T + 32
+    G.py = 9 * G.T + 32
+}
