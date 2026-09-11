@@ -1,4 +1,4 @@
-# AGENTS.md — kopman (Byte Eater)
+# AGENTS.md — kofman (Byte Eater)
 
 Especificação técnica e funcional do projeto para agentes que forem editar o
 código. Repositório: `kofman/` (este diretório). Linguagem do projeto: **Kof
@@ -10,7 +10,7 @@ Makefile.
 
 ## 1. Visão geral
 
-`kopman` é um jogo de labirinto estilo pacman, 100% Kof, fullstack:
+`kofman` é um jogo de labirinto estilo pacman, 100% Kof, fullstack:
 
 - **Frontend** (`src/game/game.kf`, target **kofjs**): o Byte Eater (criatura
   amarela alada) come pellets num labirinto 16×12 enquanto 3 *code bugs*
